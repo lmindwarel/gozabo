@@ -1,4 +1,4 @@
-package gobudins
+package gozabo
 
 import "time"
 
