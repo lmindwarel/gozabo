@@ -16,25 +16,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+const SandboxURL = "https://api.zabo.com/sandbox-v1"
+const LiveURL = "https://api.zabo.com/v1"
+
 type Config struct {
 	ClientID  string `mapstructure:"clientID"`
 	APIKey    string `mapstructure:"apiKey"`
 	APISecret string `mapstructure:"apiSecret"`
+	Sandbox   bool   `mapstructure:"sandbox"`
 }
 
 // Controller is the struct for budget insight controller
 type Controller struct {
-	config     Config
-	httpClient *http.Client
-	listeners  WebhooksListeners
+	config      Config
+	httpClient  *http.Client
+	whListeners WebhooksListeners
 }
 
 // New create new budget insight controller
 func NewController(config Config, listeners WebhooksListeners) *Controller {
 	return &Controller{
-		config:     config,
-		httpClient: &http.Client{},
-		listeners:  listeners,
+		config:      config,
+		httpClient:  &http.Client{},
+		whListeners: listeners,
 	}
 }
 
@@ -143,5 +147,12 @@ func (ctrl *Controller) request(method string, route string, queryParams map[str
 }
 
 func (ctrl *Controller) getURL(route string) string {
-	return fmt.Sprintf("https://%s.biapi.pro/2.0%s", ctrl.config.Domain, route)
+	var baseURL string
+	if ctrl.config.Sandbox {
+		baseURL = SandboxURL
+	} else {
+		baseURL = LiveURL
+	}
+
+	return fmt.Sprintf("%s%s", baseURL, route)
 }
