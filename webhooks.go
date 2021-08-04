@@ -13,14 +13,14 @@ type WebhooksListeners struct {
 }
 
 type WebhookEvent struct {
-	Event string `json:"event"`
-	Data  string `json:"data"` // keep as raw type (json string) to decode after depending on event type
+	Event string          `json:"event"`
+	Data  json.RawMessage `json:"data"` // keep as raw type (json string) to decode after depending on event type
 }
 
 func (ctrl *Controller) GinWebhookEndpoint(c *gin.Context) {
 	var event WebhookEvent
 	if err := c.ShouldBindJSON(&event); err != nil {
-		fmt.Printf("Failed to unmarshal created user: %s\n", err)
+		fmt.Printf("Failed to unmarshal webhook payload: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
@@ -33,10 +33,10 @@ func (ctrl *Controller) GinWebhookEndpoint(c *gin.Context) {
 	}
 }
 
-func (ctrl *Controller) whPostAccount(c *gin.Context, data string) {
+func (ctrl *Controller) whPostAccount(c *gin.Context, data []byte) {
 	var account Account
-	if err := json.Unmarshal([]byte(data), &account); err != nil {
-		fmt.Printf("Failed to unmarshal account: %s\n", err)
+	if err := json.Unmarshal(data, &account); err != nil {
+		fmt.Printf("Failed to unmarshal account: %s\nraw account is: %+v", err, string(data))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}

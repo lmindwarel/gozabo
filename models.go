@@ -1,6 +1,10 @@
 package gozabo
 
-import "time"
+import (
+	"fmt"
+	"strconv"
+	"time"
+)
 
 const (
 	RouteAccessToken   = "/auth/token/access"
@@ -27,45 +31,33 @@ func (mytime *Time) UnmarshalJSON(b []byte) (err error) {
 	//   time.Parse(`"`+time.RFC3339Nano+`"`, s)
 	s = s[1 : len(s)-1]
 
-	t, err := time.Parse(time.RFC3339Nano, s)
+	t, err := time.Parse("Mon, 2 Jan 2006 15:04:05 MST", s)
 	if err != nil {
-		t, err = time.Parse(time.RFC1123, s)
+		var tsInt int64
+		tsInt, err = strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			fmt.Printf("cannot parse int")
+			return err
+		}
+
+		t = time.Unix(tsInt, 0)
 	}
+
 	mytime.Time = t
-	return
-}
 
-type Date struct {
-	time.Time
-}
-
-func (mydate *Date) UnmarshalJSON(b []byte) (err error) {
-	s := string(b)
-
-	// Get rid of the quotes "" around the value.
-	// A second option would be to include them
-	// in the date format string instead, like so below:
-	//   time.Parse(`"`+time.RFC3339Nano+`"`, s)
-	s = s[1 : len(s)-1]
-
-	t, err := time.Parse(time.RFC3339Nano, s)
-	if err != nil {
-		t, err = time.Parse("2006-01-02", s)
-	}
-	mydate.Time = t
 	return
 }
 
 // Account as described at https://docs.budget-insight.com/reference/bank-accounts#response-bankaccount-object
 type Account struct {
-	ID             int       `json:"id"`
+	ID             string    `json:"id"`
 	Token          string    `json:"token"`
-	ExpirationTime time.Time `json:"exp_time"`
-	Provider       Provider  `json:"id_source"`
-	// Balances []Balance `json:"balances"`
-	Blockchain *string
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ExpirationTime Time      `json:"exp_time"`
+	Provider       Provider  `json:"provider"`
+	Balances       []Balance `json:"balances"`
+	Blockchain     *string
+	CreatedAt      Time `json:"created_at"`
+	UpdatedAt      Time `json:"updated_at"`
 }
 
 type AuthType string
@@ -108,4 +100,19 @@ const (
 type Currency struct {
 	Type AssetType `json:"type"`
 	List []string  `json:"list"`
+}
+
+type Balance struct {
+	Ticker              string `json:"ticker"`
+	ProviderTicker      string `json:"provider_ticker"`
+	Name                string `json:"name"`
+	AssetIsVerified     bool   `json:"asset_is_verified"`
+	AssetType           string `json:"asset_type"`
+	Amount              string `json:"amount"`
+	Decimals            string `json:"decimals"`
+	FiatTicker          string `json:"fiat_ticker"`
+	FiatValue           string `json:"fiat_value"`
+	FiatAssetIsVerified bool   `json:"fiat_asset_is_verified"`
+	Logo                string `json:"logo"`
+	UpdatedAt           Time   `json:"updated_at"`
 }
