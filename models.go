@@ -109,7 +109,7 @@ type Balance struct {
 	AssetIsVerified     bool   `json:"asset_is_verified"`
 	AssetType           string `json:"asset_type"`
 	Amount              string `json:"amount"`
-	Decimals            string `json:"decimals"`
+	Decimals            int    `json:"decimals"`
 	FiatTicker          string `json:"fiat_ticker"`
 	FiatValue           string `json:"fiat_value"`
 	FiatAssetIsVerified bool   `json:"fiat_asset_is_verified"`

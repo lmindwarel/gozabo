@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 )
 
 type WebhooksListeners struct {
-	OnAccountCreated func(Account)
+	OnAccountCreated func(Account, url.Values)
 }
 
 type WebhookEvent struct {
@@ -34,12 +35,26 @@ func (ctrl *Controller) GinWebhookEndpoint(c *gin.Context) {
 }
 
 func (ctrl *Controller) whPostAccount(c *gin.Context, data []byte) {
+	var err error
+
 	var account Account
-	if err := json.Unmarshal(data, &account); err != nil {
+	if err = json.Unmarshal(data, &account); err != nil {
 		fmt.Printf("Failed to unmarshal account: %s\nraw account is: %+v", err, string(data))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
-	ctrl.whListeners.OnAccountCreated(account)
+	// meta
+	metaHeader := c.GetHeader("X-Connect-Meta")
+	var meta url.Values
+	if metaHeader != "" {
+		meta, err = url.ParseQuery(metaHeader)
+		if err != nil {
+			fmt.Printf("Failed parse meta content: %s", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+	}
+
+	ctrl.whListeners.OnAccountCreated(account, meta)
 }
